@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Better Passwork</title>
+    <script defer src="options.js"></script>
+</head>
+<body style="padding: 1em;">
+    <form id="options-form" style="display: flex; flex-direction: column; align-items: start; gap: 1em;">
+        <div style="display: flex; flex-direction: column;">
+            <label for="url">Passwork-URL</label>
+            <input type="text" name="url" id="url" placeholder="https://passwork.example.com">
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <label for="key">API-Key</label>
+            <input type="password" name="key" id="key" placeholder="your api key">
+        </div>
+        <input type="submit" value="save">
+    </form>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 2,
+  "name": "Better Passwork",
+  "version": "1.0",
+
+  "description": "Does the same as Passwork, but better",
+
+  "icons": {
+    "128": "better-passwork-128.png"
+  },
+
+  "content_scripts": [
+    {
+      "js": ["better-passwork.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false,
+    "type": "module"
+  },
+
+  "browser_action": {
+    "default_popup": "popup/popup.html"
+  },
+
+  "options_ui": {
+    "page": "options/options.html"
+  },
+  
+  "permissions": [
+    "storage", "tabs", "https://passwork.pus-gmbh.eu/*"
+  ],
+  
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "@better-passwork"
+    }
+  },
+  
+  "commands": {
+    "fill": {
+      "suggested_key": {
+        "default": "Ctrl+Space"
+      },
+      "description": "Fills the detected form using the first password found"
+    }
+  }
+}

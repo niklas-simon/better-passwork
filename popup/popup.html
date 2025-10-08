@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script defer src="popup.js"></script>
+</head>
+<body style="display: flex; flex-direction: column; gap: 1em;">
+    <h1 style="margin: 0;">Better Passwork</h1>
+    <section style="display: flex; flex-direction: column; gap: 1em;">
+        <span id="loading">loading...</span>
+        <div style="display: none; flex-direction: column;" id="current"></div>
+        <input type="text" id="search" placeholder="search here">
+        <span id="search-loading" style="display: none;">loading...</span>
+        <div style="display: none; flex-direction: column;" id="search-results"></div>
+    </section>
+    <span id="password-entry" style="display: none; flex-direction: row; gap: 5px; flex-wrap: nowrap;">
+        <span id="name" style="flex: 1"></span>
+        <span style="display: flex; flex-direction: row; gap: 0;">
+            <button id="copy_login" title="copy username">U</button>
+            <button id="copy_password" title="copy password">P</button>
+            <button id="fill" title="fill form">></button>
+        </span>
+    </span>
+    <div style="display: flex;">
+        <button id="settings">settings</button>
+    </div>
+</body>
+</html>
