@@ -169,7 +169,11 @@ browser.commands.onCommand.addListener(async c => {
         const fullUrl = new URL(tabs[0].url);
         const url = fullUrl.origin + fullUrl.pathname;
 
-        const searchRes = await search(url);
+        let searchRes = await search(url);
+
+        if (!searchRes.length) {
+            searchRes = await search(fullUrl.origin);
+        }
 
         if (searchRes.length > 0) {
             const detailRes = await detail(searchRes[0].id);

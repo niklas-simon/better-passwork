@@ -21,12 +21,26 @@ async function detailLogin(id) {
 }
 
 async function _findLogins() {
-    const search_res = await browser.runtime.sendMessage({
+    let search_res = await browser.runtime.sendMessage({
         type: "search",
         data: {
             search: getUrl()
         }
     });
+
+    if (!search_res.success) {
+        console.error(search_res.error);
+        return null;
+    }
+
+    if (search_res.data.length === 0) {
+        search_res = await browser.runtime.sendMessage({
+            type: "search",
+            data: {
+                search: window.location.origin
+            }
+        });
+    }
 
     if (!search_res.success) {
         console.error(search_res.error);
@@ -67,6 +81,49 @@ async function fillLogin(data = null) {
     passwordInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
 }
 
+function addFillerToInput(input) {
+    const img = document.createElement("img");
+    
+    img.src = browser.runtime.getURL("better-passwork-128.png");
+    img.style.height = "1em";
+    img.style.position = "absolute";
+    img.style.zIndex = "1000";
+    img.className = "better-passwork-filler";
+    
+    document.body.append(img);
+
+    img.addEventListener("click", () => fillLogin());
+
+    if (!input.id) {
+        input.id = btoa(new Uint8Array(Array.from(new Array(32)).map(() => Math.random() * 256)).join(""));
+    }
+
+    img.dataset.forInput = input.id;
+
+    updateFillerPosition(img);
+}
+
+function updateFillerPosition(filler) {
+    const input = document.getElementById(filler.dataset.forInput);
+    const inputRect = input.getBoundingClientRect();
+    const imgRect = filler.getBoundingClientRect();
+
+    filler.style.top = (inputRect.top + inputRect.height / 2 - imgRect.height / 2) + "px";
+    filler.style.left = (inputRect.left + inputRect.width - inputRect.height / 2 - imgRect.height / 2) + "px";
+}
+
+function updateAllFillerPositions() {
+    document.querySelectorAll(".better-passwork-filler").forEach(e => {
+        const input = document.getElementById(e.dataset.forInput);
+
+        if (!input || !input.isConnected) {
+            document.body.removeChild(e);
+        } else {
+            updateFillerPosition(e);
+        }
+    })
+}
+
 let logins = null,
     passwordInput = null,
     userInput = null;
@@ -79,6 +136,8 @@ const config = { attributes: false, childList: true, subtree: true };
 
 // Callback function to execute when mutations are observed
 const callback = (mutationList, observer) => {
+    updateAllFillerPositions();
+
     // find first password field
     passwordInput = targetNode.querySelector("input[type='password']");
 
@@ -107,8 +166,9 @@ const callback = (mutationList, observer) => {
 
     // set to processed
     passwordInput.setAttribute("data-better-passwork-processed", "true");
-    userInput.style.border = "1px solid lime";
-    passwordInput.style.border = "1px solid lime";
+
+    addFillerToInput(userInput);
+    addFillerToInput(passwordInput);
 
     if (!logins) {
         findLogins();
@@ -120,6 +180,8 @@ const observer = new MutationObserver(callback);
 
 // Start observing the target node for configured mutations
 observer.observe(targetNode, config);
+
+window.addEventListener("resize", () => updateAllFillerPositions());
 
 async function onMessage(message, sender, sendResponse) {
     try {
