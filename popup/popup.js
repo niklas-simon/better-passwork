@@ -1,4 +1,4 @@
-let in_progress = null;
+let in_progress = {};
 
 async function getUrl() {
     const tabs = await browser.tabs.query({currentWindow: true, active: true});
@@ -35,17 +35,17 @@ async function _findLogins(url) {
         return null;
     }
 
-    in_progress = null;
+    in_progress[url] = null;
 
     return search_res.data;
 };
 
 function findLogins(url) {
-    if (!in_progress) {
-        in_progress = _findLogins(url);
+    if (!in_progress[url]) {
+        in_progress[url] = _findLogins(url);
     }
 
-    return in_progress;
+    return in_progress[url];
 }
 
 async function fillLogin(login) {
@@ -60,10 +60,18 @@ async function fillLogin(login) {
 function showLogins(container, logins) {
     const template = document.getElementById("password-entry");
 
-    for (const login of logins) {
+    for (const login of logins.slice(0, 10)) {
         const clone = template.cloneNode(true);
+        const name_span = clone.querySelector("#name");
+        let name = login.name;
+
+        if (name.length > 50) {
+            name = login.name.substring(0, 20) + "..." + login.name.substring(login.name.length - 20, login.name.length);
+
+            name_span.title = login.name;
+        }
         
-        clone.querySelector("#name").innerText = login.name;
+        name_span.innerText = name;
         clone.style.display = "flex";
 
         clone.querySelector("#copy_login").addEventListener("click", () => navigator.clipboard.writeText(login.login));
@@ -81,38 +89,59 @@ function showLogins(container, logins) {
         container.append(clone);
     }
 
+    if (logins.length > 10) {
+        const span = document.createElement("span");
+
+        span.innerText = `(+${logins.length - 10} more)`;
+
+        container.append(span);
+    }
+
     container.style.display = "flex";
 }
 
 document.getElementById("settings").addEventListener("click", () => browser.runtime.openOptionsPage());
 
 (async function() {
-    console.log("hello popup");
+    const search_results = document.getElementById("search-results");
+    const search_loading = document.getElementById("search-loading");
 
     let debounce_timeout = null;
+    let last_request_id = 0;
 
     document.querySelector("#search").addEventListener("input", e => {
-        console.log(e.target.value);
-
         if (debounce_timeout) {
             clearTimeout(debounce_timeout);
         }
 
         debounce_timeout = setTimeout(async () => {
-            const search_results = document.getElementById("search-results");
+            let request_id = ++last_request_id;
 
-            document.getElementById("search-loading").style.display = "initial";
+            search_loading.style.display = "flex";
             search_results.style.display = "none";
             search_results.innerHTML = "";
 
-            const logins = await findLogins(e.target.value);
+            try {
+                const logins = await findLogins(e.target.value);
 
-            document.getElementById("search-loading").style.display = "none";
+                if (request_id !== last_request_id) {
+                    return;
+                }
 
-            if (logins.length === 0) {
-                search_results.innerText = "(no results)";
-            } else {
-                showLogins(search_results, logins);
+                if (logins.length === 0) {
+                    search_results.innerText = "(no results)";
+                } else {
+                    showLogins(search_results, logins);
+                }
+            } catch (e) {
+                if (request_id !== last_request_id) {
+                    return;
+                }
+                
+                search_results.innerText = "Something went wrong. Please try again.";
+            } finally {
+                search_loading.style.display = "none";
+                search_results.style.display = "flex";
             }
         }, 500);
     })
@@ -123,20 +152,29 @@ document.getElementById("settings").addEventListener("click", () => browser.runt
         return;
     }
 
-    let logins = await findLogins(url);
+    const current = document.getElementById("current");
+    const loading = document.getElementById("loading");
 
-    if (logins.length === 0) {
-        logins = await findLogins(new URL(url).host);
+    try {
+        let logins = await findLogins(url);
 
         if (logins.length === 0) {
-            document.getElementById("loading").innerText = "(no passwords for current url)"
-            return;
+            logins = await findLogins(new URL(url).host);
+
+            if (logins.length === 0) {
+                current.innerText = "(no passwords for current url)";
+
+                return;
+            }
+        } else {
+            showLogins(current, logins);
         }
+    } catch (e) {
+        current.innerText = "Something went wrong. Please try again.";
+    } finally {
+        loading.style.display = "none";
+        current.style.display = "flex";
     }
 
-    document.getElementById("loading").style.display = "none";
 
-    const current = document.getElementById("current");
-
-    showLogins(current, logins);
 })();

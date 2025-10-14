@@ -1,5 +1,3 @@
-console.log("hello options");
-
 document.getElementById("options-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 

@@ -1,5 +1,3 @@
-console.log("hello background!");
-
 const API_ENDPOINT = "/api/v4";
 
 async function baseUrl() {
@@ -151,7 +149,6 @@ async function onMessage(message, sender, sendResponse) {
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("onMessage", message);
     if (!["search", "detail"].includes(message.type)) {
         return false;
     }
@@ -162,7 +159,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 browser.commands.onCommand.addListener(async c => {
-    console.log("command", c);
     if (c === "fill") {
         const tabs = await browser.tabs.query({currentWindow: true, active: true});
 
