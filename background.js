@@ -1,7 +1,11 @@
 const API_ENDPOINT = "/api/v4";
 
 async function baseUrl() {
-    const url = await browser.storage.sync.get("url");
+    const url = await chrome.storage.sync.get("url");
+
+    if (!url.url) {
+        throw new Error("no_url");
+    }
 
     return url.url + API_ENDPOINT;
 }
@@ -60,17 +64,23 @@ async function request(path, method = "GET", body = null, auth = null) {
         data: res_body.data
     });
 
+    console.log(res_body.data);
+
     return res_body.data;
 }
 
 async function login() {
     console.log("logging in");
 
-    const key = await browser.storage.sync.get("key");
+    const key = await chrome.storage.sync.get("key");
+
+    if (!key.key) {
+        throw new Error("no_api_key")
+    }
 
     const login_body = await request(`/auth/login/${key.key}`, "POST", null, key.key);
     
-    await browser.storage.session.set({
+    await chrome.storage.session.set({
         login: login_body
     });
 
@@ -82,7 +92,7 @@ async function login() {
 let inProgress = null;
 
 async function _getToken() {
-    let stored_login = (await browser.storage.session.get("login")).login;
+    let stored_login = (await chrome.storage.session.get("login")).login;
 
     if (!stored_login || stored_login.refreshTokenExpiredAt <= (new Date().getTime() / 1000 + 1)) {
         console.log("refresh token expired");
@@ -93,7 +103,7 @@ async function _getToken() {
 
         stored_login = await request(`/auth/refreshToken/${stored_login.token}/${stored_login.refreshToken}`, "POST", null, false);
 
-        await browser.storage.session.set({
+        await chrome.storage.session.set({
             login: stored_login
         });
     }
@@ -141,14 +151,15 @@ async function onMessage(message, sender, sendResponse) {
             data: res
         });
     } catch (e) {
+        console.error(e);
         sendResponse({
             success: false,
-            error: e
+            error: typeof e === "object" && e.message ? e.message : ("" + e)
         })
     }
 }
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!["search", "detail"].includes(message.type)) {
         return false;
     }
@@ -158,9 +169,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
 });
 
-browser.commands.onCommand.addListener(async c => {
+chrome.commands.onCommand.addListener(async c => {
     if (c === "fill") {
-        const tabs = await browser.tabs.query({currentWindow: true, active: true});
+        const tabs = await chrome.tabs.query({currentWindow: true, active: true});
 
         const fullUrl = new URL(tabs[0].url);
         const url = fullUrl.origin + fullUrl.pathname;
@@ -174,7 +185,7 @@ browser.commands.onCommand.addListener(async c => {
         if (searchRes.length > 0) {
             const detailRes = await detail(searchRes[0].id);
 
-            browser.tabs.sendMessage(tabs[0].id, {
+            chrome.tabs.sendMessage(tabs[0].id, {
                 type: "fill",
                 data: detailRes
             })

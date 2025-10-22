@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Better Passwork",
   "version": "1.0",
 
@@ -12,7 +12,7 @@
   "content_scripts": [
     {
       "js": ["better-passwork.js"],
-      "matches": ["<all_urls>"]
+      "matches": ["*://*/*"]
     }
   ],
   
@@ -31,7 +31,7 @@
   },
   
   "permissions": [
-    "storage", "tabs", "https://passwork.pus-gmbh.eu/*"
+    "storage", "activeTab"
   ],
   
   "browser_specific_settings": {
@@ -47,5 +47,12 @@
       },
       "description": "Fills the detected form using the first password found"
     }
-  }
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["better-passwork-128.png"],
+      "matches": ["*://*/*"]
+    }
+  ]
 }

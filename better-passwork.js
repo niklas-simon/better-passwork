@@ -5,7 +5,7 @@ function getUrl() {
 let in_progress = null;
 
 async function detailLogin(id) {
-    const res = await browser.runtime.sendMessage({
+    const res = await chrome.runtime.sendMessage({
         type: "detail",
         data: {
             id
@@ -21,7 +21,7 @@ async function detailLogin(id) {
 }
 
 async function _findLogins() {
-    let search_res = await browser.runtime.sendMessage({
+    let search_res = await chrome.runtime.sendMessage({
         type: "search",
         data: {
             search: getUrl()
@@ -34,7 +34,7 @@ async function _findLogins() {
     }
 
     if (search_res.data.length === 0) {
-        search_res = await browser.runtime.sendMessage({
+        search_res = await chrome.runtime.sendMessage({
             type: "search",
             data: {
                 search: window.location.origin
@@ -84,7 +84,7 @@ async function fillLogin(data = null) {
 function addFillerToInput(input) {
     const img = document.createElement("img");
     
-    img.src = browser.runtime.getURL("better-passwork-128.png");
+    img.src = chrome.runtime.getURL("better-passwork-128.png");
     img.style.height = "1em";
     img.style.position = "absolute";
     img.style.zIndex = "1000";
@@ -204,7 +204,7 @@ async function onMessage(message, sender, sendResponse) {
     }
 }
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!["fill"].includes(message.type)) {
         return false;
     }

@@ -1,13 +1,13 @@
 let in_progress = {};
 
 async function getUrl() {
-    const tabs = await browser.tabs.query({currentWindow: true, active: true});
+    const tabs = await chrome.tabs.query({currentWindow: true, active: true});
     const url = new URL(tabs[0].url);
     return url.origin + url.pathname;
 }
 
 async function detailLogin(id) {
-    const res = await browser.runtime.sendMessage({
+    const res = await chrome.runtime.sendMessage({
         type: "detail",
         data: {
             id
@@ -15,15 +15,15 @@ async function detailLogin(id) {
     });
 
     if (!res.success) {
-        console.error(res.error);
-        return null;
+        console.error(JSON.stringify(res.error));
+        return res.error.message;
     }
 
     return res.data;
 }
 
 async function _findLogins(url) {
-    const search_res = await browser.runtime.sendMessage({
+    const search_res = await chrome.runtime.sendMessage({
         type: "search",
         data: {
             search: url
@@ -31,8 +31,8 @@ async function _findLogins(url) {
     });
 
     if (!search_res.success) {
-        console.error(search_res.error);
-        return null;
+        console.error(JSON.stringify(search_res.error));
+        return search_res.error;
     }
 
     in_progress[url] = null;
@@ -49,12 +49,29 @@ function findLogins(url) {
 }
 
 async function fillLogin(login) {
-    const tabs = await browser.tabs.query({currentWindow: true, active: true});
+    const tabs = await chrome.tabs.query({currentWindow: true, active: true});
 
-    browser.tabs.sendMessage(tabs[0].id, {
+    chrome.tabs.sendMessage(tabs[0].id, {
         type: "fill",
         data: login
     })
+}
+
+function handleError(error, elId) {
+    const el = document.getElementById(elId);
+
+    el.style.display = "initial";
+    
+    switch (error) {
+        case "no_url":
+            el.innerText = "Passwork URL not set. Go to settings to configure.";
+            break;
+        case "no_api_key":
+            el.innerText = "Passwork API Key not set. Go to settings to configure.";
+            break;
+        default:
+            el.innerText = "Unknown error: " + error;
+    }
 }
 
 function showLogins(container, logins) {
@@ -80,6 +97,11 @@ function showLogins(container, logins) {
 
             if (!local_login.password) {
                 local_login = await detailLogin(local_login.id);  
+
+                if (typeof local_login === "string") {
+                    handleError(local_login, "error");
+                    return;
+                }
             }
 
             navigator.clipboard.writeText(local_login.password);
@@ -100,7 +122,7 @@ function showLogins(container, logins) {
     container.style.display = "flex";
 }
 
-document.getElementById("settings").addEventListener("click", () => browser.runtime.openOptionsPage());
+document.getElementById("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
 
 (async function() {
     const search_results = document.getElementById("search-results");
@@ -128,6 +150,10 @@ document.getElementById("settings").addEventListener("click", () => browser.runt
                     return;
                 }
 
+                if (typeof logins === "string") {
+                    throw logins;
+                }
+
                 if (logins.length === 0) {
                     search_results.innerText = "(no results)";
                 } else {
@@ -137,8 +163,12 @@ document.getElementById("settings").addEventListener("click", () => browser.runt
                 if (request_id !== last_request_id) {
                     return;
                 }
-                
-                search_results.innerText = "Something went wrong. Please try again.";
+
+                if (typeof e === "string") {
+                    handleError(e, "search-results");
+                } else {
+                    search_results.innerText = "Something went wrong. Please try again.";
+                }
             } finally {
                 search_loading.style.display = "none";
                 search_results.style.display = "flex";
@@ -158,19 +188,31 @@ document.getElementById("settings").addEventListener("click", () => browser.runt
     try {
         let logins = await findLogins(url);
 
+        if (typeof logins === "string") {
+            throw logins;
+        }
+
         if (logins.length === 0) {
             logins = await findLogins(new URL(url).host);
+
+            if (typeof logins === "string") {
+                throw logins;
+            }
 
             if (logins.length === 0) {
                 current.innerText = "(no passwords for current url)";
 
                 return;
             }
-        } else {
-            showLogins(current, logins);
         }
+        
+        showLogins(current, logins);
     } catch (e) {
-        current.innerText = "Something went wrong. Please try again.";
+        if (typeof e === "string") {
+            handleError(e, "current");
+        } else {
+            current.innerText = e;//"Something went wrong. Please try again.";
+        }
     } finally {
         loading.style.display = "none";
         current.style.display = "flex";
