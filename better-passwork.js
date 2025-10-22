@@ -71,6 +71,10 @@ async function fillLogin(data = null) {
 
     let login = data || logins[0];
 
+    if (!login) {
+        return;
+    }
+
     if (!login.password) {
         login = await detailLogin(login.id);
     }
@@ -88,6 +92,8 @@ function addFillerToInput(input) {
     img.style.height = "1em";
     img.style.position = "absolute";
     img.style.zIndex = "1000";
+    img.style.filter = logins && logins.length ? "" : "grayscale(1)";
+    img.style.cursor = logins && logins.length ? "" : "not-allowed";
     img.className = "better-passwork-filler";
     
     document.body.append(img);
@@ -124,6 +130,13 @@ function updateAllFillerPositions() {
     })
 }
 
+function activateFillers() {
+    document.querySelectorAll(".better-passwork-filler").forEach(e => {
+        e.style.filter = "";
+        e.style.cursor = "";
+    });
+}
+
 let logins = null,
     passwordInput = null,
     userInput = null;
@@ -135,7 +148,7 @@ const targetNode = document.body;
 const config = { attributes: false, childList: true, subtree: true };
 
 // Callback function to execute when mutations are observed
-const callback = (mutationList, observer) => {
+const callback = async (mutationList, observer) => {
     updateAllFillerPositions();
 
     // find first password field
@@ -171,7 +184,12 @@ const callback = (mutationList, observer) => {
     addFillerToInput(passwordInput);
 
     if (!logins) {
-        findLogins();
+        logins = await findLogins();
+        console.log(logins);
+    }
+
+    if (logins && logins.length) {
+        activateFillers();
     }
 };
 
