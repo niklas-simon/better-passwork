@@ -17,12 +17,11 @@
   ],
   
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false,
+    "service_worker": "background.js",
     "type": "module"
   },
 
-  "browser_action": {
+  "action": {
     "default_popup": "popup/popup.html"
   },
 
