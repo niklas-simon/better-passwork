@@ -21,12 +21,16 @@
     "type": "module"
   },
 
+  "host_permissions": [
+    "*://*/*"
+  ],
+
   "action": {
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/index.html"
   },
 
   "options_ui": {
-    "page": "options/options.html"
+    "page": "options/index.html"
   },
   
   "permissions": [
