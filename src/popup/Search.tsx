@@ -6,7 +6,7 @@ import Logins, { TinyLogin } from "../common/logins";
 import Suspender from "../common/suspender";
 import LoginList from "./LoginList";
 
-export default function Search() {
+export default function Search({flex}: {flex?: number}) {
     const [search, setSearch] = useState("");
     const [debouncedSearch] = useDebouncedValue(search, 500);
     const results = useMemo(() => {
@@ -17,7 +17,7 @@ export default function Search() {
         return new Suspender<TinyLogin[], string>(Logins.search(debouncedSearch.trim()))
     }, [debouncedSearch]);
 
-    return <Stack pb="md">
+    return <Stack flex={flex} mih={0}>
         <TextInput
             leftSection={<SearchIcon />}
             value={search}

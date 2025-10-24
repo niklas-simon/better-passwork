@@ -26,7 +26,7 @@ export default function App() {
                 <LoginList logins={currentUrlLogins} emptyText="(no logins for current URL)" />
             </Suspense>
             <Divider label="search in Passwork" />
-            <Search />
+            <Search flex={1}/>
         </Stack>
     </MantineProvider>;
 }

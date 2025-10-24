@@ -22,7 +22,7 @@ export default function LoginList({logins, emptyText, flex}: LoginListProps) {
         return <Text>{emptyText || "(empty list)"}</Text>
     }
 
-    return <ScrollArea flex={flex} mih={Math.min(42, 300)} mah="300px" variant="native" scrollbarSize={2}>
+    return <ScrollArea flex={flex} mih={0} scrollbarSize={2}>
         <Stack>
             {res.slice(0, 20).map((login, i) => <Login key={i} login={login} />)}
             {res.length > 20 && <Text>{`(+${res.length - 20} more`}</Text>}
