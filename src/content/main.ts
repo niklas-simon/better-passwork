@@ -1,94 +1,60 @@
-function getUrl() {
-    return window.location.href.slice(0, window.location.href.length - window.location.hash.length)
-}
+import Logins, { FullLogin, TinyLogin } from "@/common/logins";
+import { Message } from "@/common/messenger";
+import Browser from "webextension-polyfill";
 
-let in_progress = null;
+let in_progress: Promise<TinyLogin[]> | null = null;
+let logins: TinyLogin[] | null = null;
+let passwordInput: HTMLInputElement | null = null;
+let userInput: HTMLInputElement | null = null;
 
-async function detailLogin(id) {
-    const res = await chrome.runtime.sendMessage({
-        type: "detail",
-        data: {
-            id
-        }
-    });
-
-    if (!res.success) {
-        console.error(res.error);
-        return null;
-    }
-
-    return res.data;
-}
-
-async function _findLogins() {
-    let search_res = await chrome.runtime.sendMessage({
-        type: "search",
-        data: {
-            search: getUrl()
-        }
-    });
-
-    if (!search_res.success) {
-        console.error(search_res.error);
-        return null;
-    }
-
-    if (search_res.data.length === 0) {
-        search_res = await chrome.runtime.sendMessage({
-            type: "search",
-            data: {
-                search: window.location.origin
-            }
-        });
-    }
-
-    if (!search_res.success) {
-        console.error(search_res.error);
-        return null;
-    }
-
-    in_progress = null;
-
-    return search_res.data;
-};
-
-function findLogins() {
+async function findLogins() {
     if (!in_progress) {
-        in_progress = _findLogins();
+        let url;
+        try {
+            url = new URL(window.location.href);
+        } catch (e) {
+            throw new Error("failed to parse URL");
+        }
+
+        in_progress = Logins.currentUrl(url);
     }
 
-    return in_progress;
+    logins = await in_progress;
+
+    return logins;
 }
 
-async function fillLogin(data = null) {
+async function fillLogin(data: FullLogin | null = null) {
+    if (!userInput || !passwordInput) {
+        return;
+    }
+    
     if (!data && !logins) {
-        logins = await findLogins();
+        await findLogins();
 
         if (!logins) {
             return;
         }
     }
 
-    let login = data || logins[0];
+    let login = data || logins![0];
 
     if (!login) {
         return;
     }
 
-    if (!login.password) {
-        login = await detailLogin(login.id);
-    }
+    let fullLogin = await Logins.detail(login.id);
 
-    userInput.value = login.login;
+    userInput.value = fullLogin.login;
     userInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
-    passwordInput.value = login.password;
+    passwordInput.value = fullLogin.password;
     passwordInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
 }
 
-function addFillerToInput(input) {
+function addFillerToInput(input: HTMLInputElement) {
     const img = document.createElement("img");
     
-    img.src = chrome.runtime.getURL("better-passwork-128.png");
+    img.src = Browser.runtime.getURL("public/logo.png");
     img.style.height = "1em";
     img.style.position = "absolute";
     img.style.zIndex = "1000";
@@ -109,8 +75,17 @@ function addFillerToInput(input) {
     updateFillerPosition(img);
 }
 
-function updateFillerPosition(filler) {
+function updateFillerPosition(filler: HTMLImageElement) {
+    if (!filler.dataset.forInput) {
+        return;
+    }
+
     const input = document.getElementById(filler.dataset.forInput);
+
+    if (!input) {
+        return;
+    }
+
     const inputRect = input.getBoundingClientRect();
     const imgRect = filler.getBoundingClientRect();
 
@@ -120,26 +95,28 @@ function updateFillerPosition(filler) {
 
 function updateAllFillerPositions() {
     document.querySelectorAll(".better-passwork-filler").forEach(e => {
-        const input = document.getElementById(e.dataset.forInput);
+        const forInput = (e as HTMLImageElement).dataset.forInput;
+
+        if (!forInput) {
+            return;
+        }
+
+        const input = document.getElementById(forInput);
 
         if (!input || !input.isConnected) {
             document.body.removeChild(e);
         } else {
-            updateFillerPosition(e);
+            updateFillerPosition(e as HTMLImageElement);
         }
     })
 }
 
 function activateFillers() {
     document.querySelectorAll(".better-passwork-filler").forEach(e => {
-        e.style.filter = "";
-        e.style.cursor = "";
+        (e as HTMLImageElement).style.filter = "";
+        (e as HTMLImageElement).style.cursor = "";
     });
 }
-
-let logins = null,
-    passwordInput = null,
-    userInput = null;
 
 // Select the node that will be observed for mutations
 const targetNode = document.body;
@@ -148,7 +125,7 @@ const targetNode = document.body;
 const config = { attributes: false, childList: true, subtree: true };
 
 // Callback function to execute when mutations are observed
-const callback = async (mutationList, observer) => {
+const callback: MutationCallback = async (_mutationList, _observer) => {
     updateAllFillerPositions();
 
     // find first password field
@@ -171,7 +148,7 @@ const callback = async (mutationList, observer) => {
     }
 
     // find corresponding user input
-    userInput = document.querySelectorAll("input[type='text'],input:not([type])")[0];
+    userInput = (document.querySelectorAll("input[type='text'],input:not([type])")[0] ?? null) as HTMLInputElement | null;
 
     if (!userInput) {
         return;
@@ -184,8 +161,7 @@ const callback = async (mutationList, observer) => {
     addFillerToInput(passwordInput);
 
     if (!logins) {
-        logins = await findLogins();
-        console.log(logins);
+        await findLogins();
     }
 
     if (logins && logins.length) {
@@ -201,7 +177,7 @@ observer.observe(targetNode, config);
 
 window.addEventListener("resize", () => updateAllFillerPositions());
 
-async function onMessage(message, sender, sendResponse) {
+async function onMessage(message: Message<any>, _sender: Browser.Runtime.MessageSender, sendResponse: (response: unknown) => void) {
     try {
         let res = undefined;
         switch (message.type) {
@@ -222,12 +198,14 @@ async function onMessage(message, sender, sendResponse) {
     }
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (!["fill"].includes(message.type)) {
-        return false;
+Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const _message = message as Message<any>;
+    if (!["fill"].includes(_message.type)) {
+        sendResponse(undefined);
+        return true;
     }
 
-    onMessage(message, sender, sendResponse);
+    onMessage(_message, sender, sendResponse);
 
     return true;
 });

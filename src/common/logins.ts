@@ -1,3 +1,4 @@
+import Browser from "webextension-polyfill";
 import Messenger from "./messenger";
 
 export interface TinyLogin {
@@ -18,22 +19,23 @@ export default class Logins {
         return res;
     }
 
-    static async currentUrl(): Promise<TinyLogin[]> {
-        const tabs = await chrome.tabs.query({currentWindow: true, active: true});
+    static async currentUrl(url?: URL): Promise<TinyLogin[]> {
+        if (!url) {
+            const tabs = await Browser.tabs.query({currentWindow: true, active: true});
 
-        if (!tabs.length) {
-            throw new Error("no active tab found");
-        }
+            if (!tabs || !tabs.length) {
+                throw new Error("no active tab found");
+            }
 
-        if (!tabs[0].url) {
-            throw new Error("active tab doesn't have a url");
-        }
+            if (!tabs[0].url) {
+                throw new Error("active tab doesn't have a url");
+            }
 
-        let url: URL;
-        try {
-            url = new URL(tabs[0].url);
-        } catch (_) {
-            throw new Error("could not parse url of active tab");
+            try {
+                url = new URL(tabs[0].url);
+            } catch (_) {
+                throw new Error("could not parse url of active tab");
+            }
         }
 
         let logins = await this.search(url.origin + url.pathname);

@@ -1,7 +1,7 @@
 import { useForm } from "@mantine/form";
 import { Options, OptionsStorage } from "../common/storage";
 import Suspender from "../common/suspender";
-import { Button, Stack, TextInput } from "@mantine/core";
+import { Button, PasswordInput, Stack, TextInput } from "@mantine/core";
 import useMonostable from "../common/useMonostable";
 
 export interface OptionsProps {
@@ -23,7 +23,10 @@ export default function OptionsForm({options: s_options}: OptionsProps) {
     });
 
     return <form onSubmit={form.onSubmit(async (values) => {
-        await OptionsStorage.set(values);
+        await OptionsStorage.set({
+            key: values.key.trim(),
+            url: values.url.trim()
+        });
 
         setSaved();
     })}>
@@ -36,7 +39,7 @@ export default function OptionsForm({options: s_options}: OptionsProps) {
                 key={form.key("url")}
                 {...form.getInputProps("url")}
             />
-            <TextInput
+            <PasswordInput
                 withAsterisk
                 label="API-Key"
                 placeholder="your API Key"

@@ -17,7 +17,7 @@ export default function Search() {
         return new Suspender<TinyLogin[], string>(Logins.search(debouncedSearch.trim()))
     }, [debouncedSearch]);
 
-    return <Stack>
+    return <Stack pb="md">
         <TextInput
             leftSection={<SearchIcon />}
             value={search}
@@ -25,7 +25,7 @@ export default function Search() {
             placeholder="search for logins"
         />
         {results && <Suspense fallback={<Group p="lg" justify="center"><Loader /></Group>}>
-            <LoginList logins={results} emptyText="(no results for search term)" />
+            <LoginList logins={results} flex={1} emptyText="(no results for search term)" />
         </Suspense>}
     </Stack>
 }

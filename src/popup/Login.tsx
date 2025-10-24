@@ -21,8 +21,8 @@ function normalizeText(str: string, len: number) {
 export default function Login({login}: LoginProps) {
     const normalized = useMemo(() => {
         return {
-            name: normalizeText(login.name, 50),
-            description: login.url ? `${normalizeText(login.url, 50)} - ${login.login}` : login.login
+            name: normalizeText(login.name, 30),
+            description: login.url ? `${normalizeText(login.url, 30)} - ${login.login}` : login.login
         }
     }, [login]);
 
@@ -30,18 +30,18 @@ export default function Login({login}: LoginProps) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    return <Group wrap="nowrap">
-        <Stack>
+    return <Group wrap="nowrap" justify="space-between">
+        <Stack gap={0} style={{textWrap: "nowrap"}}>
             <Text>{normalized.name}</Text>
             <Text opacity={0.7} size="xs">{normalized.description}</Text>
         </Stack>
         <Popover opened={showError}>
             <Popover.Target>
-                <Group wrap="nowrap">
-                    <ActionIcon title="copy username" loading={loading} onClick={() => navigator.clipboard.writeText(login.login)}>
+                <ActionIcon.Group>
+                    <ActionIcon size="lg" variant="light" title="copy username" loading={loading} onClick={() => navigator.clipboard.writeText(login.login)}>
                         <User />
                     </ActionIcon>
-                    <ActionIcon title="copy password" loading={loading} onClick={async () => {
+                    <ActionIcon size="lg" variant="light" title="copy password" loading={loading} onClick={async () => {
                         setLoading(true);
                         try {
                             const detail = await Logins.detail(login.id);
@@ -55,7 +55,7 @@ export default function Login({login}: LoginProps) {
                     }}>
                         <Key />
                     </ActionIcon>
-                    <ActionIcon title="fill login form" loading={loading} onClick={async () => {
+                    <ActionIcon size="lg" variant="light" title="fill login form" loading={loading} onClick={async () => {
                         setLoading(true);
                         try {
                             await Logins.fill(login);
@@ -67,7 +67,7 @@ export default function Login({login}: LoginProps) {
                     }}>
                         <LogIn />
                     </ActionIcon>
-                </Group>
+                </ActionIcon.Group>
             </Popover.Target>
             <Popover.Dropdown>
                 <Text c="red">{error || "Something went wrong. Please try again."}</Text>

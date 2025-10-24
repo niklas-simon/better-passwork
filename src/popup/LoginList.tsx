@@ -5,14 +5,15 @@ import Login from "./Login";
 
 export interface LoginListProps {
     logins: Suspender<TinyLogin[], string>,
-    emptyText?: string
+    emptyText?: string,
+    flex?: number
 }
 
-export default function LoginList({logins, emptyText}: LoginListProps) {
+export default function LoginList({logins, emptyText, flex}: LoginListProps) {
     const isError = logins.isError();
 
     if (isError) {
-        return <Text c="red">{logins.err()}</Text>
+        return <Text c="red">{`${logins.err()}`}</Text>
     }
 
     const res = logins.read();
@@ -21,9 +22,10 @@ export default function LoginList({logins, emptyText}: LoginListProps) {
         return <Text>{emptyText || "(empty list)"}</Text>
     }
 
-    return <ScrollArea flex={1} mah="300px" variant="native">
+    return <ScrollArea flex={flex} mih={Math.min(42, 300)} mah="300px" variant="native" scrollbarSize={2}>
         <Stack>
-            {res.map((login, i) => <Login key={i} login={login} />)}
+            {res.slice(0, 20).map((login, i) => <Login key={i} login={login} />)}
+            {res.length > 20 && <Text>{`(+${res.length - 20} more`}</Text>}
         </Stack>
     </ScrollArea>
 }
