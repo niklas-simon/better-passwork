@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "pnpm run build:firefox && pnpm run build:chrome",
+    "build:firefox": "tsc -b && vite build --config vite.firefox.ts",
+    "build:chrome": "tsc -b && vite build --config vite.chrome.ts",
     "preview": "vite preview"
   },
   "dependencies": {

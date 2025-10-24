@@ -3,6 +3,7 @@ import { User, Key, LogIn } from "react-feather";
 import Logins, { TinyLogin } from "../common/logins";
 import { useMemo, useState } from "react";
 import useMonostable from "../common/useMonostable";
+import FeedbackAction from "./FeedbackAction";
 
 export interface LoginProps {
     login: TinyLogin
@@ -28,7 +29,6 @@ export default function Login({login}: LoginProps) {
 
     const [showError, setShowError] = useMonostable(1000);
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
 
     return <Group wrap="nowrap" justify="space-between">
         <Stack gap={0} style={{textWrap: "nowrap"}}>
@@ -38,11 +38,10 @@ export default function Login({login}: LoginProps) {
         <Popover opened={showError}>
             <Popover.Target>
                 <ActionIcon.Group>
-                    <ActionIcon size="lg" variant="light" title="copy username" loading={loading} onClick={() => navigator.clipboard.writeText(login.login)}>
+                    <FeedbackAction size="lg" variant="light" title="copy username" onClick={() => navigator.clipboard.writeText(login.login)}>
                         <User />
-                    </ActionIcon>
-                    <ActionIcon size="lg" variant="light" title="copy password" loading={loading} onClick={async () => {
-                        setLoading(true);
+                    </FeedbackAction>
+                    <FeedbackAction size="lg" variant="light" title="copy password" onClick={async () => {
                         try {
                             const detail = await Logins.detail(login.id);
 
@@ -51,22 +50,19 @@ export default function Login({login}: LoginProps) {
                             setError("" + e);
                             setShowError();
                         }
-                        setLoading(false);
                     }}>
                         <Key />
-                    </ActionIcon>
-                    <ActionIcon size="lg" variant="light" title="fill login form" loading={loading} onClick={async () => {
-                        setLoading(true);
+                    </FeedbackAction>
+                    <FeedbackAction size="lg" variant="light" title="fill login form" onClick={async () => {
                         try {
                             await Logins.fill(login);
                         } catch (e) {
                             setError("" + e);
                             setShowError();
                         }
-                        setLoading(false);
                     }}>
                         <LogIn />
-                    </ActionIcon>
+                    </FeedbackAction>
                 </ActionIcon.Group>
             </Popover.Target>
             <Popover.Dropdown>

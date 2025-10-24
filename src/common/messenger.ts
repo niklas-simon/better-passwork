@@ -35,6 +35,7 @@ export default class Messenger {
             throw new Error("active tab doesn't have an id");
         }
 
+        console.log("sending", tabs[0].id, {type, data});
         const res = await Browser.tabs.sendMessage(tabs[0].id, { type, data }) as MessageResult<R>;
 
         if (!res.success) {

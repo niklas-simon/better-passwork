@@ -199,6 +199,8 @@ async function onMessage(message: Message<any>, _sender: Browser.Runtime.Message
 }
 
 Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("message", message);
+
     const _message = message as Message<any>;
     if (!["fill"].includes(_message.type)) {
         sendResponse(undefined);
@@ -209,3 +211,5 @@ Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     return true;
 });
+
+console.log("content script done");
