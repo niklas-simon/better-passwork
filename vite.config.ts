@@ -35,7 +35,11 @@ export function configurate(browser?: 'firefox' | 'chrome') {
             react(),
             crx({ manifest, browser }),
             addFirefoxExclusives(),
-            zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
+            zip({
+                outDir: 'release',
+                outFileName: `crx-${name}-${version}${browser ? `-${browser}` : ""}.zip`,
+                inDir: browser ? `dist/${browser}` : "dist"
+            }),
         ],
         server: {
             cors: {

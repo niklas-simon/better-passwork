@@ -1,13 +1,14 @@
 {
   "name": "better-passwork",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "pnpm run build:firefox && pnpm run build:chrome",
     "build:firefox": "tsc -b && vite build --config vite.firefox.ts",
     "build:chrome": "tsc -b && vite build --config vite.chrome.ts",
+    "publish:firefox": "set /p WEB_EXT_API_KEY=api key: && set /p WEB_EXT_API_SECRET=api secret: && cd release && pnpx web-ext sign -s ../dist/firefox --channel listed ",
     "preview": "vite preview"
   },
   "dependencies": {
