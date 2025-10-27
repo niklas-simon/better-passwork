@@ -114,25 +114,31 @@ export default class Api {
     static inProgress: Promise<string> | null = null;
 
     static async _getToken(): Promise<string> {
-        let stored_login = (await Storage.get("session", {login: null})).login as Login | null;
+        try {
+            let stored_login = (await Storage.get("session", {login: null})).login as Login | null;
 
-        if (!stored_login || stored_login.refreshTokenExpiredAt <= (new Date().getTime() / 1000 + 1)) {
-            console.log("refresh token expired");
-            
-            stored_login = await this.login();
-        } else if (stored_login.tokenExpiredAt <= (new Date().getTime() / 1000 + 1)) {
-            console.log("token expired");
+            if (!stored_login || stored_login.refreshTokenExpiredAt <= (new Date().getTime() / 1000 + 1)) {
+                console.log("refresh token expired");
+                
+                stored_login = await this.login();
+            } else if (stored_login.tokenExpiredAt <= (new Date().getTime() / 1000 + 1)) {
+                console.log("token expired");
 
-            stored_login = await this.request<Login>(`/auth/refreshToken/${stored_login.token}/${stored_login.refreshToken}`, "POST", null, false);
+                stored_login = await this.request<Login>(`/auth/refreshToken/${stored_login.token}/${stored_login.refreshToken}`, "POST", null, false);
 
-            await Storage.set("session", {
-                login: stored_login
-            });
+                await Storage.set("session", {
+                    login: stored_login
+                });
+            }
+
+            this.inProgress = null;
+
+            return stored_login.token;
+        } catch (e) {
+            this.inProgress = null;
+
+            throw e;
         }
-
-        this.inProgress = null;
-
-        return stored_login.token;
     }
 
     static getToken(): Promise<string> {

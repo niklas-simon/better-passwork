@@ -23,7 +23,7 @@ export default function App() {
             </Group>
             <Divider label="logins for current URL" />
             <Suspense fallback={<Group p="lg" justify="center"><Loader/></Group>}>
-                <LoginList logins={currentUrlLogins} emptyText="(no logins for current URL)" />
+                <LoginList mah={100} logins={currentUrlLogins} emptyText="(no logins for current URL)" />
             </Suspense>
             <Divider label="search in Passwork" />
             <Search flex={1}/>

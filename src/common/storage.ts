@@ -22,14 +22,18 @@ export default class Storage {
 }
 
 export class OptionsStorage {
-    static get(): Promise<Options> {
-        return Storage.get("sync", {
+    static async get(): Promise<Options> {
+        let res = await Storage.get("sync", {
             url: "",
             key: ""
         });
+
+        console.log("options", res);
+
+        return res;
     }
 
-    static set(o: Options) {
-        return Storage.set("sync", o);
+    static async set(o: Options) {
+        await Storage.set("sync", o);
     }
 }

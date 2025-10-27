@@ -6,10 +6,11 @@ import Login from "./Login";
 export interface LoginListProps {
     logins: Suspender<TinyLogin[], string>,
     emptyText?: string,
-    flex?: number
+    flex?: number,
+    mah?: number | string
 }
 
-export default function LoginList({logins, emptyText, flex}: LoginListProps) {
+export default function LoginList({logins, emptyText, flex, mah}: LoginListProps) {
     const isError = logins.isError();
 
     if (isError) {
@@ -22,7 +23,7 @@ export default function LoginList({logins, emptyText, flex}: LoginListProps) {
         return <Text>{emptyText || "(empty list)"}</Text>
     }
 
-    return <ScrollArea flex={flex} mih={0} scrollbarSize={2}>
+    return <ScrollArea flex={flex} mih={0} mah={mah} scrollbarSize={2}>
         <Stack>
             {res.slice(0, 20).map((login, i) => <Login key={i} login={login} />)}
             {res.length > 20 && <Text>{`(+${res.length - 20} more`}</Text>}
