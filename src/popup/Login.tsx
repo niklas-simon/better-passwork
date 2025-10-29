@@ -4,6 +4,7 @@ import Logins, { TinyLogin } from "../common/logins";
 import { useMemo, useState } from "react";
 import useMonostable from "../common/useMonostable";
 import FeedbackAction from "./FeedbackAction";
+import Browser from "webextension-polyfill";
 
 export interface LoginProps {
     login: TinyLogin
@@ -23,7 +24,17 @@ export default function Login({login}: LoginProps) {
     const normalized = useMemo(() => {
         return {
             name: normalizeText(login.name, 30),
-            description: login.url ? `${normalizeText(login.url, 30)} - ${login.login}` : login.login
+            url: login.url ? <a
+                    title={login.url}
+                    href={login.url}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        Browser.tabs.create({url: login.url})
+                    }}
+                >
+                    {normalizeText(login.url, 30)}
+                </a> : null,
+            user: login.login
         }
     }, [login]);
 
@@ -33,7 +44,13 @@ export default function Login({login}: LoginProps) {
     return <Group wrap="nowrap" justify="space-between">
         <Stack gap={0} style={{textWrap: "nowrap"}}>
             <Text>{normalized.name}</Text>
-            <Text opacity={0.7} size="xs">{normalized.description}</Text>
+            <Group gap={0} opacity={0.7}>
+                {normalized.url && <>
+                    <Text size="xs">{normalized.url}</Text>
+                    <Text size="xs">&nbsp;-&nbsp;</Text>
+                </>}
+                <Text size="xs">{normalized.user}</Text>
+            </Group>
         </Stack>
         <Popover opened={showError}>
             <Popover.Target>

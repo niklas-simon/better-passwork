@@ -38,7 +38,10 @@ export function configurate(browser?: 'firefox' | 'chrome') {
             zip({
                 outDir: 'release',
                 outFileName: `crx-${name}-${version}${browser ? `-${browser}` : ""}.zip`,
-                inDir: browser ? `dist/${browser}` : "dist"
+                inDir: browser ? `dist/${browser}` : "dist",
+                filter(fileName, _filePath, _isDirectory) {
+                    return fileName !== ".vite";
+                }
             }),
         ],
         server: {
