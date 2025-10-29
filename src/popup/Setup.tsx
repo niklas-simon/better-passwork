@@ -8,7 +8,7 @@ export interface ConfigSteps {
     origin: boolean
 }
 
-export default function Setup({configSteps, url}: {configSteps: ConfigSteps, url: URL | null}) {
+export default function Setup({configSteps}: {configSteps: ConfigSteps}) {
     return <Stack flex={1} justify="start" pt="lg" align="start" gap="xs">
         <Text>Welcome to Better Passwork. To get you started, a few things must be configured:</Text>
         <Group>
@@ -20,13 +20,9 @@ export default function Setup({configSteps, url}: {configSteps: ConfigSteps, url
             {!configSteps.key && <Button variant="subtle" onClick={() => Browser.runtime.openOptionsPage()}>Options</Button>}
         </Group>
         <Group>
-            <Checkbox readOnly label="Permission to call Passwork API granted" checked={configSteps.origin} />
-            {!configSteps.origin && <Button variant="subtle" onClick={async () => {   
-                if (!url) {
-                    return;
-                }
-
-                Browser.permissions.request({origins: [url.origin + "/*"]});
+            <Checkbox readOnly label="Permission to access all web sites granted" checked={configSteps.origin} />
+            {!configSteps.origin && <Button variant="subtle" onClick={async () => {
+                Browser.permissions.request({origins: ["<all_urls>"]});
                 window.close();
             }}>Allow</Button>}
         </Group>

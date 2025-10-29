@@ -16,7 +16,6 @@ export default function App() {
         origin: false,
         url: false
     });
-    const [url, setUrl] = useState<URL | null>(null);
     const [tab, setTab] = useState<string>("overview");
 
     useEffect(() => {
@@ -33,26 +32,21 @@ export default function App() {
                 newSteps.key = true;
             }
 
-            let url;
             if (store.url) {
                 try {
-                    url = new URL(store.url);
+                    new URL(store.url);
                     newSteps.url = true;
-                    
-                    setUrl(url);
                 } catch (e) {
                     newSteps.url = false;
                 }
             }
 
-            if (url) {
-                const {origins} = await Browser.permissions.getAll();
-            
-                if (!origins?.includes("<all_urls>") && !origins?.includes(url.origin + "/*")) {
-                    newSteps.origin = false;
-                } else {
-                    newSteps.origin = true;
-                }
+            const {origins} = await Browser.permissions.getAll();
+        
+            if (!origins?.includes("<all_urls>")) {
+                newSteps.origin = false;
+            } else {
+                newSteps.origin = true;
             }
             
             setConfigSteps(newSteps);
@@ -62,7 +56,7 @@ export default function App() {
 
         checkConfiguration().then(configSteps => {
             if (configSteps.checked && (!configSteps.key || !configSteps.url || !configSteps.origin)) {
-                setTab("config");
+                setTab("setup");
             }
         });
 
@@ -83,7 +77,7 @@ export default function App() {
             TabEl = <Overview />;
             break;
         case "setup":
-            TabEl = <Setup configSteps={configSteps} url={url} />;
+            TabEl = <Setup configSteps={configSteps}/>;
             break;
         default:
             TabEl = <Text>nothing to display. This shouldn't happen.</Text>

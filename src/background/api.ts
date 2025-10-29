@@ -18,7 +18,7 @@ interface LoginResult extends TinyLogin {
     cryptedPassword: string
 }
 
-const API_ENDPOINT = "/api/v4";
+const API_ENDPOINT = "api/v4";
 
 export default class Api {
     static async baseUrl() {
@@ -37,11 +37,11 @@ export default class Api {
 
         const {origins} = await Browser.permissions.getAll();
 
-        if (!origins?.includes("<all_urls>") && !origins?.includes(url.origin + "/*")) {
-            throw new Error("This extension needs the permission to make requests to your Passwork URL");
+        if (!origins?.includes("<all_urls>")) {
+            throw new Error("This extension needs the permission to access all web sites");
         }
 
-        return store.url + API_ENDPOINT;
+        return url.toString() + API_ENDPOINT;
     }
 
     static async request<R, B extends BodyInit = BodyInit>(path: string, method = "GET", body: B | null = null, auth: false | string | null = null): Promise<R> {

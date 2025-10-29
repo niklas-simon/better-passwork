@@ -2,6 +2,7 @@ import { ScrollArea, Stack, Text } from "@mantine/core";
 import { TinyLogin } from "../common/logins";
 import Suspender from "../common/suspender";
 import Login from "./Login";
+import { useMemo } from "react";
 
 export interface LoginListProps {
     logins: Suspender<TinyLogin[], string>,
@@ -12,9 +13,16 @@ export interface LoginListProps {
 
 export default function LoginList({logins, emptyText, flex, mah}: LoginListProps) {
     const isError = logins.isError();
+    const errText = useMemo(() => {
+        if (isError) {
+            return logins.err();
+        } else {
+            return null;
+        }
+    }, [logins, isError])
 
-    if (isError) {
-        return <Text c="red">{`${logins.err()}`}</Text>
+    if (errText) {
+        return <Text c="red" title={errText.length > 50 ? errText : undefined}>{`${errText.length > 50 ? errText.substring(0, 50) + "..." : errText}`}</Text>
     }
 
     const res = logins.read();
