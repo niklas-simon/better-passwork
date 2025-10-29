@@ -28,8 +28,6 @@ export class OptionsStorage {
             key: ""
         });
 
-        console.log("options", res);
-
         return res;
     }
 

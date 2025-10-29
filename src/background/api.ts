@@ -22,17 +22,31 @@ const API_ENDPOINT = "/api/v4";
 
 export default class Api {
     static async baseUrl() {
-        const url = await Storage.get("sync", {url: null});
+        const store = await Storage.get("sync", {url: null});
 
-        if (!url.url) {
+        if (!store.url) {
             throw new Error("Passwork URL not set. Go to settings to configure.");
         }
 
-        return url.url + API_ENDPOINT;
+        let url;
+        try {
+            url = new URL(store.url);
+        } catch (e) {
+            throw new Error("Configured Passwork URL is not a valid URL.");
+        }
+
+        const {origins} = await Browser.permissions.getAll();
+
+        if (!origins?.includes("<all_urls>") && !origins?.includes(url.origin + "/*")) {
+            throw new Error("This extension needs the permission to make requests to your Passwork URL");
+        }
+
+        return store.url + API_ENDPOINT;
     }
 
     static async request<R, B extends BodyInit = BodyInit>(path: string, method = "GET", body: B | null = null, auth: false | string | null = null): Promise<R> {
         console.log(method, path, body);
+
         const req_key = method + path + body;
         const cacheObj = await Storage.get<Record<string, CacheEntry<R> | null>>("session", {[req_key]: null});
 
@@ -55,8 +69,9 @@ export default class Api {
         } else if (auth) {
             headers.set("Passwork-Auth", auth);
         }
-
-        const res = await fetch((await this.baseUrl()) + path, {
+        
+        const baseUrl = await this.baseUrl();
+        const res = await fetch(baseUrl + path, {
             method,
             headers,
             body
@@ -85,8 +100,6 @@ export default class Api {
                 data: res_body.data
             }
         });
-
-        console.log(res_body.data);
 
         return res_body.data as R;
     }

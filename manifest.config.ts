@@ -22,6 +22,7 @@ export default defineManifest({
         js: ['src/content/main.ts'],
         matches: ['https://*/*'],
     }],
+    host_permissions: ["<all_urls>"],
     background: {
         scripts: ["src/background/main.ts"],
         service_worker: "src/background/main.ts"
