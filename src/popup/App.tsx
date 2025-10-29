@@ -1,19 +1,13 @@
 import "@mantine/core/styles.css";
 
-import { ActionIcon, Button, Checkbox, Group, MantineProvider, Stack, Text, Title } from '@mantine/core'
+import { ActionIcon, Group, MantineProvider, Stack, Text, Title } from '@mantine/core'
 import { theme } from '@/common/theme'
 import { Settings } from 'react-feather'
 import { useEffect, useState } from 'react'
 import Browser from 'webextension-polyfill'
 import Storage from "@/common/storage";
 import Overview from "./Overview";
-
-interface ConfigSteps {
-    checked: boolean
-    url: boolean,
-    key: boolean,
-    origin: boolean
-}
+import Setup, { ConfigSteps } from "./Setup";
 
 export default function App() {
     const [configSteps, setConfigSteps] = useState<ConfigSteps>({
@@ -23,6 +17,7 @@ export default function App() {
         url: false
     });
     const [url, setUrl] = useState<URL | null>(null);
+    const [tab, setTab] = useState<string>("overview");
 
     useEffect(() => {
         const checkConfiguration = async () => {
@@ -61,9 +56,15 @@ export default function App() {
             }
             
             setConfigSteps(newSteps);
+
+            return newSteps;
         }
 
-        checkConfiguration();
+        checkConfiguration().then(configSteps => {
+            if (configSteps.checked && (!configSteps.key || !configSteps.url || !configSteps.origin)) {
+                setTab("config");
+            }
+        });
 
         Browser.storage.sync.onChanged.addListener(checkConfiguration);
         Browser.permissions.onAdded.addListener(checkConfiguration);
@@ -76,6 +77,19 @@ export default function App() {
         }
     }, []);
 
+    let TabEl;
+    switch (tab) {
+        case "overview":
+            TabEl = <Overview />;
+            break;
+        case "setup":
+            TabEl = <Setup configSteps={configSteps} url={url} />;
+            break;
+        default:
+            TabEl = <Text>nothing to display. This shouldn't happen.</Text>
+            break;
+    }
+
     return <MantineProvider theme={theme} defaultColorScheme="auto">
         <Stack p="md" w="100vw" h="100vh" justify="center" align="center">
             <Group justify="space-between" wrap="nowrap" w="100%">
@@ -84,30 +98,7 @@ export default function App() {
                     <Settings/>
                 </ActionIcon>
             </Group>
-            {configSteps.checked && (!configSteps.key || !configSteps.url || !configSteps.origin) ?
-                <Stack flex={1} justify="start" pt="lg" align="start" gap="xs">
-                    <Text>Welcome to Better Passwork. To get you started, a few things must be configured:</Text>
-                    <Group>
-                        <Checkbox readOnly label="Passwork URL set in options" checked={configSteps.url} />
-                        {!configSteps.url && <Button variant="subtle" onClick={() => Browser.runtime.openOptionsPage()}>Options</Button>}
-                    </Group>
-                    <Group>
-                        <Checkbox readOnly label="Passwork API Key set in options" checked={configSteps.key} />
-                        {!configSteps.key && <Button variant="subtle" onClick={() => Browser.runtime.openOptionsPage()}>Options</Button>}
-                    </Group>
-                    <Group>
-                        <Checkbox readOnly label="Permission to call Passwork API granted" checked={configSteps.origin} />
-                        {!configSteps.origin && <Button variant="subtle" onClick={async () => {   
-                            if (!url) {
-                                return;
-                            }
-
-                            Browser.permissions.request({origins: [url.origin + "/*"]});
-                            window.close();
-                        }}>Allow</Button>}
-                    </Group>
-                </Stack>
-            : <Overview />}
+            {TabEl}
         </Stack>
     </MantineProvider>;
 }
